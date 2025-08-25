@@ -49,7 +49,8 @@ public class SecurityConfig {
                 // 인가(Authorization, 엔드포인트의 접근 권한) 규칙 정의:
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/api/auth/**").permitAll()
-                        .anyRequest().authenticated()
+//                        .anyRequest().authenticated() // 배포 과정에서 실제 적용할 때
+                        .anyRequest().permitAll() // 개발 과정에서 임시 허용 (배포할 때는 X)
                 )
 
                 // 요청 헤더의 JWT를 검증하고 SecurityContext에 인증 정보를 설정하는 역할

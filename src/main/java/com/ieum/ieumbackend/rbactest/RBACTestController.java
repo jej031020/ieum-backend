@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class RBACTestController {
 
-    @PreAuthorize("hasRole('ADMIN')")
+//    @PreAuthorize("hasRole('ADMIN')") // 개발 과정에서만 주석 처리
     @GetMapping("/test/admin")
     public String testAdminOnly() {
         return "admin";
