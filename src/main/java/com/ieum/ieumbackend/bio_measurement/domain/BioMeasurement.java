@@ -1,5 +1,6 @@
 package com.ieum.ieumbackend.bio_measurement.domain;
 
+import com.ieum.ieumbackend.auth.domain.User;
 import com.ieum.ieumbackend.common.domain.TimeStamped;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -18,10 +19,12 @@ public class BioMeasurement extends TimeStamped {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    // User와의 다대일 관계 (N:1) - 여러 측정값이 한 유저에 속함
+    @ManyToOne(fetch = FetchType.LAZY)  // 필요 시 EAGER로도 가능
+    @JoinColumn(name = "user_id", nullable = false) // FK 지정
+    private User user;
 
-    // "한 번의 검사"를 식별하는 외래키(FK) - 12개의 입력을 한 세트로
+    // "한 번의 검사"를 구분하는 session_id
     @Column(name = "session_id", nullable = false)
     private Long sessionId;
 
@@ -46,4 +49,3 @@ public class BioMeasurement extends TimeStamped {
     public enum Organ { KIDNEY, SPLEEN, LUNG, HEART, LIVER, BLADDER }
     public enum Side { LEFT, RIGHT }
 }
-
