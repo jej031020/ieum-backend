@@ -1,6 +1,6 @@
-package com.ieum.ieumbackend.auth.domain;
+package com.ieum.backend.auth.domain;
 
-import com.ieum.ieumbackend.common.domain.TimeStamped;
+import com.ieum.backend.common.domain.TimeStamped;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,26 +17,37 @@ public class User extends TimeStamped {
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private String username;
-
-    @Column(nullable = false)
-    private String nickname;
+    private String userId;
 
     @Column(nullable = false)
     private String password;
 
+    @Column(nullable = false)
+    private String userName;
+
     @Column(nullable = false, unique = true)
     private String email;
+
+    @Column(nullable = false)
+    private String birth;
+
+    public enum Gender { MALE, FEMALE }
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = true)
+    private Gender gender;
 
     @Column(name = "user_role")
     @Enumerated(EnumType.STRING)
     private UserRole userRole;
 
-    public User(String username, String nickname, String password, String email, UserRole userRole) {
-        this.username = username;
-        this.nickname = nickname;
+    public User(String userId, String userName, String password, String email, String birth, Gender gender, UserRole userRole) {
+        this.userId   = userId;
+        this.userName = userName;
         this.password = password;
-        this.email = email;
+        this.email    = email;
+        this.birth    = birth;
+        this.gender   = gender;
         this.userRole = userRole;
     }
 }

@@ -1,9 +1,10 @@
-package com.ieum.ieumbackend.auth.config;
+package com.ieum.backend.auth.config;
 
 import com.ieum.ieumbackend.auth.filter.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -15,46 +16,73 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
+
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    // 비밀번호 인코더 (BCrypt)를 Bean으로 등록
+    // 비밀번호 인코더
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    // AuthenticationManager를 수동 Bean으로 등록
+    // AuthenticationManager Bean
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
 
-    // SecurityFilterChain을 수동 Bean으로 등록하여 HTTP 보안 규칙 정의
+    // HTTP 보안 규칙
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
-                .sessionManagement(sessionManagement ->
-                        sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
+                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-                // 인가(Authorization, 엔드포인트의 접근 권한) 규칙 정의:
-                .authorizeHttpRequests(authorize -> authorize
+                // ✅ CORS 활성화
+                .cors(c -> {})
+
+                // 인가 규칙 (+ Preflight 허용)
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Preflight
                         .requestMatchers("/api/auth/**").permitAll()
-//                        .anyRequest().authenticated() // 배포 과정에서 실제 적용할 때
-                        .anyRequest().permitAll() // 개발 과정에서 임시 허용 (배포할 때는 X)
+                        // 배포 시에는 아래 줄을 주석 해제하고, .anyRequest().authenticated()로 변경을 권장
+                        .anyRequest().permitAll()
                 )
 
-                // 요청 헤더의 JWT를 검증하고 SecurityContext에 인증 정보를 설정하는 역할
+                // JWT 필터
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
+    }
+
+    // ✅ CORS 설정 Bean
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+
+        // 정확한 오리진만 허용 (개발: Vite 기본 포트)
+        // credentials(true)일 때는 * 사용 금지
+        config.setAllowedOriginPatterns(List.of("http://localhost:5173"));
+
+        config.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
+        config.setAllowedHeaders(List.of("Content-Type","Authorization","X-Requested-With","Accept"));
+        config.setAllowCredentials(true); // 쿠키/세션(JWT 쿠키 등) 사용 시 true
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
     }
 }
