@@ -1,6 +1,6 @@
-package com.ieum.ieumbackend.auth.filter;
+package com.ieum.backend.auth.filter;
 
-import com.ieum.ieumbackend.auth.util.JwtUtil;
+import com.ieum.backend.auth.util.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

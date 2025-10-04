@@ -1,6 +1,6 @@
-package com.ieum.ieumbackend.qscc.domain;
+package com.ieum.backend.qscc.domain;
 
-import com.ieum.ieumbackend.common.domain.TimeStamped;
+import com.ieum.backend.common.domain.TimeStamped;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

@@ -1,4 +1,4 @@
-package com.ieum.ieumbackend.auth.util;
+package com.ieum.backend.auth.util;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;

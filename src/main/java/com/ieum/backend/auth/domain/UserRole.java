@@ -1,4 +1,4 @@
-package com.ieum.ieumbackend.auth.domain;
+package com.ieum.backend.auth.domain;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

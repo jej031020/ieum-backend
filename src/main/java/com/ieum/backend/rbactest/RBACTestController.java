@@ -1,4 +1,4 @@
-package com.ieum.ieumbackend.rbactest;
+package com.ieum.backend.rbactest;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;

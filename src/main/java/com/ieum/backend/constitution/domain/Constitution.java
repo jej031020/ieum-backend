@@ -1,6 +1,6 @@
-package com.ieum.ieumbackend.constitution.domain;
+package com.ieum.backend.constitution.domain;
 
-import com.ieum.ieumbackend.common.domain.TimeStamped;
+import com.ieum.backend.common.domain.TimeStamped;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import lombok.Getter;

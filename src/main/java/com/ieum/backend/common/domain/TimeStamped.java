@@ -1,4 +1,4 @@
-package com.ieum.ieumbackend.common.domain;
+package com.ieum.backend.common.domain;
 
 import jakarta.persistence.*;
 import lombok.Getter;
