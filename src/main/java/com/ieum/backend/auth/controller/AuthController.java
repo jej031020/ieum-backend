@@ -1,12 +1,12 @@
-package com.ieum.ieumbackend.auth.controller;
+package com.ieum.backend.auth.controller;
 
 // ... 기존 임포트 ...
 
-import com.ieum.ieumbackend.auth.dto.AuthResponseDto;
-import com.ieum.ieumbackend.auth.dto.LoginRequestDto;
-import com.ieum.ieumbackend.auth.dto.SignUpRequestDto;
-import com.ieum.ieumbackend.auth.service.UserService;
-import com.ieum.ieumbackend.auth.util.JwtUtil;
+import com.ieum.backend.auth.dto.AuthResponseDto;
+import com.ieum.backend.auth.dto.LoginRequestDto;
+import com.ieum.backend.auth.dto.SignUpRequestDto;
+import com.ieum.backend.auth.service.UserService;
+import com.ieum.backend.auth.util.JwtUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -22,14 +22,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
     private final UserService userService;
 
-    @PostMapping("/auth/signup")
+    @PostMapping("/signup")
     public ResponseEntity<String> registerUser(@Valid @RequestBody SignUpRequestDto signUpRequestDto) {
         try {
             userService.registerUser(signUpRequestDto);
@@ -41,12 +41,12 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/auth/login")
+    @PostMapping("/login")
     public ResponseEntity<AuthResponseDto> authenticateUser(@Valid @RequestBody LoginRequestDto loginRequestDto) {
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
-                            loginRequestDto.getUsername(),
+                            loginRequestDto.getUserId(),
                             loginRequestDto.getPassword()
                     )
             );
