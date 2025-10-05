@@ -1,6 +1,6 @@
 package com.ieum.backend.auth.config;
 
-import com.ieum.ieumbackend.auth.filter.JwtAuthenticationFilter;
+import com.ieum.backend.auth.filter.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
