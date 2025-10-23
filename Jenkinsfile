@@ -26,7 +26,7 @@ pipeline {
     }
 
     tools {
-        'org.sonarsource.scanner.cli.SonarRunnerInstallation' "${env.SONAR_SCANNER_TOOL}"
+        'hudson.plugins.sonar.SonarRunnerInstallation' "${env.SONAR_SCANNER_TOOL}"
     }
 
     stages {
