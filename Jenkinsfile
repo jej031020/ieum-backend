@@ -52,7 +52,7 @@ pipeline {
             steps {
                 withSonarQubeEnv(env.SONAR_SERVER) {
                     // Jenkins 파라미터를 Gradle 명령어에 시스템 속성으로 전달합니다.
-                    sh "./gradlew sonarqube -Dsonar.projectKey=${params.SONAR_PROJECT_KEY}"
+                    sh "./gradlew sonar -Dsonar.projectKey=${params.SONAR_PROJECT_KEY} -Dsonar.token=${SONAR_AUTH_TOKEN}"
                 }
                 
                 timeout(time: 10, unit: 'MINUTES') {
