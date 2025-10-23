@@ -13,7 +13,7 @@ pipeline {
     agent {
         docker {
             image 'gradle:8.5.0-jdk17' // 1. Gradle 이미지로 변경 (프로젝트 JDK 버전에 맞게 선택)
-            args '-v $HOME/.gradle:/home/gradle/.gradle' // 2. Gradle 캐시를 위한 볼륨 마운트
+            args '-v gradle-cache:/home/gradle/.gradle'
         }
     }
 
