@@ -3,7 +3,7 @@ properties([
     // 파이프라인 실행 시 사용자로부터 값을 입력받음
     parameters([
         string(name: 'SONAR_PROJECT_KEY', defaultValue: 'your-project-key-here', description: 'SonarQube Project Key'),
-        string(name: 'SWV_BACKEND_URL', defaultValue: 'http://swv-backend-url.example.com/api/notification', description: 'SWV Backend Notification URL'), // 쉼표 추가
+        string(name: 'SWV_BACKEND_URL', defaultValue: 'https://metaverseacademy, description: 'SWV Backend Notification URL'), // 쉼표 추가
         string(name: 'NOTIFY_EMAIL', defaultValue: 'jaehokim1005@g.hongik.ac.kr', description: 'Email to send notification') // 파라미터 이름 통일
     ])
 ])
@@ -12,8 +12,8 @@ pipeline {
     // 1. 개선: 특정 Docker 이미지를 사용하여 일관되고 격리된 빌드 환경 보장
     agent {
         docker {
-            image 'maven:3.8.4-openjdk-11' // 예시: Maven 프로젝트용 Docker 이미지
-            args '-v $HOME/.m2:/root/.m2' // Maven 캐시 공유로 빌드 속도 향상
+            image 'gradle:8.5.0-jdk17' // 1. Gradle 이미지로 변경 (프로젝트 JDK 버전에 맞게 선택)
+            args '-v $HOME/.gradle:/home/gradle/.gradle' // 2. Gradle 캐시를 위한 볼륨 마운트
         }
     }
 
@@ -36,24 +36,23 @@ pipeline {
             }
         }
 
+        stage('Make gradlew executable') { // 3. gradlew 실행 권한 부여 단계 추가
+            steps {
+                sh 'chmod +x ./gradlew'
+            }
+        }
+
         stage('Build Application') {
             steps {
-                // 실제 빌드 명령어 사용 (예시: Maven)
-                sh 'mvn clean package -DskipTests'
+                sh './gradlew clean build -x test' // 4. Gradle 빌드 명령어로 변경
             }
         }
 
         stage('SonarQube Analysis & Quality Gate') {
             steps {
                 withSonarQubeEnv(env.SONAR_SERVER) {
-                    // 3. 개선: 파라미터를 사용하여 Project Key를 동적으로 설정
-                    sh """
-                        ${scannerHome}/bin/sonar-scanner \
-                            -Dsonar.projectKey=${params.SONAR_PROJECT_KEY} \
-                            -Dsonar.projectName=${env.JOB_NAME} \
-                            -Dsonar.sources=. \
-                            -Dsonar.java.binaries=target/classes
-                    """
+                    // 5. Gradle을 통한 SonarQube 분석 실행
+                    sh './gradlew sonarqube'
                 }
                 
                 timeout(time: 10, unit: 'MINUTES') {
