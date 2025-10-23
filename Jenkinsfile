@@ -3,7 +3,7 @@ properties([
     // 파이프라인 실행 시 사용자로부터 값을 입력받음
     parameters([
         string(name: 'SONAR_PROJECT_KEY', defaultValue: 'your-project-key-here', description: 'SonarQube Project Key'),
-        string(name: 'SWV_BACKEND_URL', defaultValue: 'https://metaverseacademy, description: 'SWV Backend Notification URL'), // 쉼표 추가
+        string(name: 'SWV_BACKEND_URL', defaultValue: 'https://metaverseacademy', description: 'SWV Backend Notification URL'), // 쉼표 추가
         string(name: 'NOTIFY_EMAIL', defaultValue: 'jaehokim1005@g.hongik.ac.kr', description: 'Email to send notification') // 파라미터 이름 통일
     ])
 ])
