@@ -51,8 +51,8 @@ pipeline {
         stage('SonarQube Analysis & Quality Gate') {
             steps {
                 withSonarQubeEnv(env.SONAR_SERVER) {
-                    // 5. Gradle을 통한 SonarQube 분석 실행
-                    sh './gradlew sonarqube'
+                    // Jenkins 파라미터를 Gradle 명령어에 시스템 속성으로 전달합니다.
+                    sh "./gradlew sonarqube -Dsonar.projectKey=${params.SONAR_PROJECT_KEY}"
                 }
                 
                 timeout(time: 10, unit: 'MINUTES') {
