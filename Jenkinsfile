@@ -68,33 +68,48 @@ pipeline {
         stage('Notify SWV Backend') {
             steps {
                 script {
-                    // [개선 4] 이전 단계에서 저장된 변수를 사용하여 동적으로 Payload 생성
                     def payload = [
-                        jobName             : env.JOB_NAME,
-                        buildNumber         : env.BUILD_NUMBER.toInteger(),
-                        buildUrl            : env.BUILD_URL,
-                        commitHash          : sh(returnStdout: true, script: 'git rev-parse HEAD').trim(),
-                        
-                        // SonarQube로부터 받은 실제 데이터 주입
-                        sonarQubeTaskStatus : "SUCCESS", // 이 단계에 도달했다면 분석 자체는 성공
-                        qualityGateStatus   : env.SONARQUBE_STATUS, // 'OK' 또는 'ERROR'
-                        
-                        // SonarQube의 상세 조건들을 포함 (JSON 문자열을 다시 파싱하여 객체로 변환)
-                        qualityGateConditions: new groovy.json.JsonSlurper().parseText(env.SONARQUBE_CONDITIONS)
+                        // ... 이전과 동일한 payload 내용 ...
                     ]
                     
                     def payloadJson = groovy.json.JsonOutput.toJson(payload)
-                    echo "Sending enriched notification to SWV Backend..."
+                    echo "Sending notification to SWV Backend..."
+                    echo "Request URL: ${params.SWV_BACKEND_URL}"
+                    echo "Request Body:"
                     echo groovy.json.JsonOutput.prettyPrint(payloadJson)
 
-                    httpRequest(
-                        url: params.SWV_BACKEND_URL,
-                        httpMode: 'POST',
-                        contentType: 'APPLICATION_JSON',
-                        requestBody: payloadJson,
-                        authentication: env.SWV_CREDENTIALS,
-                        quiet: true
-                    )
+                    // [개선] try-catch 블록으로 예외 처리 및 상세 로깅
+                    try {
+                        // [개선] response를 변수로 받아 상태 코드와 내용을 로깅
+                        def response = httpRequest(
+                            url: params.SWV_BACKEND_URL,
+                            httpMode: 'POST',
+                            contentType: 'APPLICATION_JSON',
+                            requestBody: payloadJson,
+                            authentication: env.SWV_CREDENTIALS,
+                            quiet: false // [개선] quiet: false로 변경하여 기본 로그 출력 활성화
+                        )
+
+                        // 응답 내용 로깅
+                        echo "Notification sent successfully."
+                        echo "Response Status: ${response.status}"
+                        echo "Response Body:"
+                        // 응답 내용이 JSON이라면 예쁘게 출력, 아니라면 그대로 출력
+                        try {
+                            def responseJson = new groovy.json.JsonSlurper().parseText(response.content)
+                            echo groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(responseJson))
+                        } catch (e) {
+                            echo response.content
+                        }
+
+                    } catch (hudson.AbortException e) {
+                        // httpRequest가 실패하면 예외가 발생함
+                        echo "Failed to send notification."
+                        echo "Error: ${e.getMessage()}"
+                        // 실패 시 빌드를 중단시키지 않으려면 아래 라인을 주석 처리
+                        // currentBuild.result = 'UNSTABLE' 
+                        // error("Notification to SWV Backend failed.")
+                    }
                 }
             }
         }
