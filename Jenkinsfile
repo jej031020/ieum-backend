@@ -50,13 +50,18 @@ pipeline {
 
         stage('SonarQube Analysis & Quality Gate') {
             steps {
-                withSonarQubeEnv(env.SONAR_SERVER) {
-                    // Jenkins 파라미터를 Gradle 명령어에 시스템 속성으로 전달합니다.
-                    sh "./gradlew --no-daemon sonar -Dsonar.projectKey=${params.SONAR_PROJECT_KEY} -Dsonar.token=${SONAR_AUTH_TOKEN}"
-                }
-                
-                timeout(time: 10, unit: 'MINUTES') {
-                    waitForQualityGate abortPipeline: true, credentialsId: env.SONAR_CREDENTIALS
+                script { // [개선 1] script 블록으로 감싸서 변수를 선언할 수 있도록 함
+                    withSonarQubeEnv(env.SONAR_SERVER) {
+                        sh "./gradlew --no-daemon sonar -Dsonar.projectKey=${params.SONAR_PROJECT_KEY} -Dsonar.token=${SONAR_AUTH_TOKEN}"
+                    }
+                    
+                    // [개선 2] waitForQualityGate의 결과를 'qualityGateStatus' 변수에 저장
+                    def qualityGateStatus = waitForQualityGate abortPipeline: true, credentialsId: env.SONAR_CREDENTIALS
+                    
+                    // [개선 3] 다음 스테이지에서 사용할 수 있도록 결과를 전역 변수에 저장 (선택사항이지만 유용)
+                    env.SONARQUBE_STATUS = qualityGateStatus.status
+                    // 예시: Quality Gate의 모든 조건을 JSON 문자열로 저장
+                    env.SONARQUBE_CONDITIONS = groovy.json.JsonOutput.toJson(qualityGateStatus.conditions)
                 }
             }
         }
@@ -64,21 +69,27 @@ pipeline {
         stage('Notify SWV Backend') {
             steps {
                 script {
-                    // 4. 개선: Groovy Map과 JsonOutput을 사용하여 안전하게 JSON 생성
+                    // [개선 4] 이전 단계에서 저장된 변수를 사용하여 동적으로 Payload 생성
                     def payload = [
-                        jobName     : env.JOB_NAME,
-                        buildNumber : env.BUILD_NUMBER.toInteger(), // 타입을 명확히 함
-                        buildUrl    : env.BUILD_URL,
-                        status      : "SONARQUBE_PASSED",
-                        commitHash  : sh(returnStdout: true, script: 'git rev-parse HEAD').trim() // 추가 정보
+                        jobName             : env.JOB_NAME,
+                        buildNumber         : env.BUILD_NUMBER.toInteger(),
+                        buildUrl            : env.BUILD_URL,
+                        commitHash          : sh(returnStdout: true, script: 'git rev-parse HEAD').trim(),
+                        
+                        // SonarQube로부터 받은 실제 데이터 주입
+                        sonarQubeTaskStatus : "SUCCESS", // 이 단계에 도달했다면 분석 자체는 성공
+                        qualityGateStatus   : env.SONARQUBE_STATUS, // 'OK' 또는 'ERROR'
+                        
+                        // SonarQube의 상세 조건들을 포함 (JSON 문자열을 다시 파싱하여 객체로 변환)
+                        qualityGateConditions: new groovy.json.JsonSlurper().parseText(env.SONARQUBE_CONDITIONS)
                     ]
                     
                     def payloadJson = groovy.json.JsonOutput.toJson(payload)
-                    echo "Sending notification to SWV Backend..."
+                    echo "Sending enriched notification to SWV Backend..."
                     echo groovy.json.JsonOutput.prettyPrint(payloadJson)
 
                     httpRequest(
-                        url: params.SWV_BACKEND_URL, // 파라미터로 주입된 URL 사용
+                        url: params.SWV_BACKEND_URL,
                         httpMode: 'POST',
                         contentType: 'APPLICATION_JSON',
                         requestBody: payloadJson,
