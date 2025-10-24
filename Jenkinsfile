@@ -3,8 +3,7 @@ properties([
     // 파이프라인 실행 시 사용자로부터 값을 입력받음
     parameters([
         string(name: 'SONAR_PROJECT_KEY', defaultValue: 'your-project-key-here', description: 'SonarQube Project Key'),
-        string(name: 'SWV_BACKEND_URL', defaultValue: 'https://metaverseacademy', description: 'SWV Backend Notification URL'), // 쉼표 추가
-        string(name: 'NOTIFY_EMAIL', defaultValue: 'jaehokim1005@g.hongik.ac.kr', description: 'Email to send notification') // 파라미터 이름 통일
+        string(name: 'SWV_BACKEND_URL', defaultValue: 'https://metaverseacademy', description: 'SWV Backend Notification URL')
     ])
 ])
 
@@ -111,17 +110,10 @@ pipeline {
         success {
             // 파이프라인 성공 시 실행
             echo "Pipeline successfully completed."
-            // 성공 알림 이메일 전송
-            // mail to: params.NOTIFY_EMAIL, // 올바른 파라미터 이름 참조
-            //     subject: "Jenkins Pipeline Success: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-            //     body: "The pipeline '${env.JOB_NAME}' (build #${env.BUILD_NUMBER}) has completed successfully.\n\nBuild URL: ${env.BUILD_URL}"
         }
         failure {
             // 파이프라인 실패 시 실행
             echo "Pipeline failed!"
-            // mail to: params.NOTIFY_EMAIL, // 올바른 파라미터 이름 참조
-            //     subject: "Jenkins Pipeline Failure: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-            //     body: "The pipeline '${env.JOB_NAME}' (build #${env.BUILD_NUMBER}) has failed.\n\nBuild URL: ${env.BUILD_URL}"
         }
     }
 }
