@@ -36,7 +36,7 @@ pipeline {
         }
 
         stage('Make gradlew executable') { // 3. gradlew 실행 권한 부여 단계 추가
-            steps {
+            steps { 
                 sh 'chmod +x ./gradlew'
             }
         }
@@ -60,7 +60,12 @@ pipeline {
                     // [개선 3] 다음 스테이지에서 사용할 수 있도록 결과를 전역 변수에 저장 (선택사항이지만 유용)
                     env.SONARQUBE_STATUS = qualityGateStatus.status
                     // 예시: Quality Gate의 모든 조건을 JSON 문자열로 저장
-                    env.SONARQUBE_CONDITIONS = groovy.json.JsonOutput.toJson(qualityGateStatus.conditions)
+                    echo "--- Quality Gate Status Object Properties ---"
+                    qualityGateStatus.properties.each { prop ->
+                        echo "${prop.key}: ${prop.value}"
+                    }
+                    echo "-------------------------------------------"
+                    // env.SONARQUBE_CONDITIONS = groovy.json.JsonOutput.toJson(qualityGateStatus.conditions)
                 }
             }
         }
