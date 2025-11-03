@@ -79,11 +79,12 @@ pipeline {
                     // payload 객체를 JSON 문자열로 변환
                     def payloadJson = groovy.json.JsonOutput.toJson(payload)
                     
-                    echo "Sending notification to SWV Backend..."
-                    echo "Request URL: ${params.SWV_BACKEND_URL}"
-                    echo "Request Body:"
+                    echo "========================================================"
+                    echo ">>> Preparing to send HTTP POST to SWV Backend"
+                    echo ">>> Request URL: ${params.SWV_BACKEND_URL}"
+                    echo ">>> Request Body:"
                     echo groovy.json.JsonOutput.prettyPrint(payloadJson)
-
+                    echo "========================================================"
                     try {
                         def response = httpRequest(
                             url: params.SWV_BACKEND_URL,
