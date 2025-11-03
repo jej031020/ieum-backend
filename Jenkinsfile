@@ -91,7 +91,7 @@ pipeline {
                             httpMode: 'POST',
                             contentType: 'APPLICATION_JSON',
                             requestBody: payloadJson,
-                            authentication: env.SWV_CREDENTIALS,
+                            // authentication: env.SWV_CREDENTIALS,
                             quiet: false 
                         )
                         echo "Notification sent successfully."
