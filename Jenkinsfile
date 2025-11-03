@@ -64,45 +64,30 @@ pipeline {
         stage('Notify SWV Backend') {
             steps {
                 script {
-                    echo "========================================================"
-                    echo ">>> STEP 1: VERIFYING NETWORK CONNECTION (using curl)"
-                    
-                    try {
-                        // -v: 상세 로그 출력
-                        // -X POST: POST 메서드 사용
-                        // -H '...': JSON 컨텐츠 타입 헤더 설정
-                        // -d '...': 간단한 JSON 데이터 전송
-                        // --fail: HTTP 4xx, 5xx 에러 시 실패로 처리
-                        // -s -o /dev/null: 응답 본문은 출력하지 않음 (연결 성공 여부만 중요)
-                        sh """
-                            curl -v -X POST \\
-                                -H "Content-Type: application/json" \\
-                                -d '{"message": "Network test from Jenkins curl"}' \\
-                                --fail http://mp_backend:3000/api/team-statistics -s -o /dev/null
-                        """
-                        echo ">>> RESULT: curl command executed successfully. Network connection to mp_backend:3000 seems OK."
-                        
-                    } catch (Exception e) {
-                        echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-                        echo ">>> RESULT: curl command FAILED. Network connection IS THE PROBLEM."
-                        echo ">>> Error Message: ${e.getMessage()}"
-                        echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-                        error("Network diagnostics failed. The build agent cannot reach the backend service.")
-                    }
-                    echo "========================================================"
-
-                    // --- 기존 httpRequest 로직은 일단 주석 처리 ---
-                    /*
-                    def payload = [ ... ]
+                    def payload = [
+                        // ... payload 데이터 ...
+                    ]
                     def payloadJson = groovy.json.JsonOutput.toJson(payload)
                     
+                    echo "========================================================"
+                    echo ">>> STEP 2: VERIFYING httpRequest (WITHOUT authentication)"
+                    echo ">>> Request URL: ${params.SWV_BACKEND_URL}"
+                    echo "========================================================"
+                    
                     try {
-                        def response = httpRequest(...)
-                        ...
-                    } catch (hudson.AbortException e) {
-                        ...
+                        def response = httpRequest(
+                            url: params.SWV_BACKEND_URL,
+                            httpMode: 'POST',
+                            contentType: 'APPLICATION_JSON',
+                            requestBody: payloadJson,
+                            // authentication: env.SWV_CREDENTIALS, // <<< 핵심: 이 줄을 주석 처리
+                            quiet: false
+                        )
+                        echo ">>> RESULT: httpRequest (without auth) succeeded. Status: ${response.status}"
+                    } catch (Exception e) {
+                        echo ">>> RESULT: httpRequest (without auth) FAILED. Error: ${e.getMessage()}"
+                        error("httpRequest failed even without authentication.")
                     }
-                    */
                 }
             }
         }
