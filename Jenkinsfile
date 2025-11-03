@@ -80,7 +80,26 @@ stage('SonarQube Analysis & Quality Gate') {
                     ]
                     
                     def payloadJson = groovy.json.JsonOutput.toJson(payload)
-                    // ... httpRequest 로직 ...
+                    
+                    try {
+                        def response = httpRequest(
+                            url: params.SWV_BACKEND_URL,
+                            httpMode: 'POST',
+                            contentType: 'APPLICATION_JSON',
+                            requestBody: payloadJson,
+                            authentication: env.SWV_CREDENTIALS,
+                            quiet: false 
+                        )
+                        echo "Notification sent successfully."
+                        echo "Response Status: ${response.status}"
+                        echo "Response Body: ${response.content}"
+
+                    } catch (hudson.AbortException e) {
+                        echo "Failed to send notification."
+                        echo "Error: ${e.getMessage()}"
+                        // 전체 빌드를 실패시키고 싶다면 아래 줄의 주석을 해제
+                        // error("Notification to SWV Backend failed.")
+                    }
                 }
             }
         }
