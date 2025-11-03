@@ -76,8 +76,7 @@ stage('SonarQube Analysis & Quality Gate') {
                         // SonarQube로부터 받은 실제 데이터 주입
                         qualityGateStatus   : env.SONARQUBE_STATUS, // 'OK'
                         
-                        // [최종 수정] 전체 결과 객체를 포함하여 백엔드에서 자유롭게 사용하도록 함
-                        sonarQubeResult     : new groovy.json.JsonSlper().parseText(env.SONARQUBE_RESULT_JSON)
+                        sonarQubeResult     : new groovy.json.JsonSlurper().parseText(env.SONARQUBE_RESULT_JSON)
                     ]
                     
                     def payloadJson = groovy.json.JsonOutput.toJson(payload)
