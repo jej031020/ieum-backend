@@ -3,7 +3,7 @@ properties([
     // 파이프라인 실행 시 사용자로부터 값을 입력받음
     parameters([
         string(name: 'SONAR_PROJECT_KEY', defaultValue: 'your-project-key-here', description: 'SonarQube Project Key'),
-        string(name: 'SWV_BACKEND_URL', defaultValue: 'https://metaverseacademy', description: 'SWV Backend Notification URL')
+        string(name: 'SWV_BACKEND_URL', defaultValue: 'http://mp_backend:3000/api/team-statistics', description: 'SWV Backend Notification URL')
     ])
 ])
 
@@ -47,25 +47,19 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis & Quality Gate') {
+stage('SonarQube Analysis & Quality Gate') {
             steps {
-                script { // [개선 1] script 블록으로 감싸서 변수를 선언할 수 있도록 함
+                script {
                     withSonarQubeEnv(env.SONAR_SERVER) {
                         sh "./gradlew --no-daemon sonar -Dsonar.projectKey=${params.SONAR_PROJECT_KEY} -Dsonar.token=${SONAR_AUTH_TOKEN}"
                     }
                     
-                    // [개선 2] waitForQualityGate의 결과를 'qualityGateStatus' 변수에 저장
                     def qualityGateStatus = waitForQualityGate abortPipeline: true, credentialsId: env.SONAR_CREDENTIALS
                     
-                    // [개선 3] 다음 스테이지에서 사용할 수 있도록 결과를 전역 변수에 저장 (선택사항이지만 유용)
+                    // [최종 수정] 가장 단순하고 안전한 정보만 env에 저장
                     env.SONARQUBE_STATUS = qualityGateStatus.status
-                    // 예시: Quality Gate의 모든 조건을 JSON 문자열로 저장
-                    echo "--- Quality Gate Status Object Properties ---"
-                    qualityGateStatus.properties.each { prop ->
-                        echo "${prop.key}: ${prop.value}"
-                    }
-                    echo "-------------------------------------------"
-                    // env.SONARQUBE_CONDITIONS = groovy.json.JsonOutput.toJson(qualityGateStatus.conditions)
+                    // 'waitForQualityGate'가 반환하는 전체 객체를 JSON 문자열로 저장
+                    env.SONARQUBE_RESULT_JSON = groovy.json.JsonOutput.toJson(qualityGateStatus)
                 }
             }
         }
@@ -74,47 +68,20 @@ pipeline {
             steps {
                 script {
                     def payload = [
-                        // ... 이전과 동일한 payload 내용 ...
+                        jobName             : env.JOB_NAME,
+                        buildNumber         : env.BUILD_NUMBER.toInteger(),
+                        buildUrl            : env.BUILD_URL,
+                        commitHash          : sh(returnStdout: true, script: 'git rev-parse HEAD').trim(),
+                        
+                        // SonarQube로부터 받은 실제 데이터 주입
+                        qualityGateStatus   : env.SONARQUBE_STATUS, // 'OK'
+                        
+                        // [최종 수정] 전체 결과 객체를 포함하여 백엔드에서 자유롭게 사용하도록 함
+                        sonarQubeResult     : new groovy.json.JsonSlper().parseText(env.SONARQUBE_RESULT_JSON)
                     ]
                     
                     def payloadJson = groovy.json.JsonOutput.toJson(payload)
-                    echo "Sending notification to SWV Backend..."
-                    echo "Request URL: ${params.SWV_BACKEND_URL}"
-                    echo "Request Body:"
-                    echo groovy.json.JsonOutput.prettyPrint(payloadJson)
-
-                    // [개선] try-catch 블록으로 예외 처리 및 상세 로깅
-                    try {
-                        // [개선] response를 변수로 받아 상태 코드와 내용을 로깅
-                        def response = httpRequest(
-                            url: params.SWV_BACKEND_URL,
-                            httpMode: 'POST',
-                            contentType: 'APPLICATION_JSON',
-                            requestBody: payloadJson,
-                            authentication: env.SWV_CREDENTIALS,
-                            quiet: false // [개선] quiet: false로 변경하여 기본 로그 출력 활성화
-                        )
-
-                        // 응답 내용 로깅
-                        echo "Notification sent successfully."
-                        echo "Response Status: ${response.status}"
-                        echo "Response Body:"
-                        // 응답 내용이 JSON이라면 예쁘게 출력, 아니라면 그대로 출력
-                        try {
-                            def responseJson = new groovy.json.JsonSlurper().parseText(response.content)
-                            echo groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(responseJson))
-                        } catch (e) {
-                            echo response.content
-                        }
-
-                    } catch (hudson.AbortException e) {
-                        // httpRequest가 실패하면 예외가 발생함
-                        echo "Failed to send notification."
-                        echo "Error: ${e.getMessage()}"
-                        // 실패 시 빌드를 중단시키지 않으려면 아래 라인을 주석 처리
-                        // currentBuild.result = 'UNSTABLE' 
-                        // error("Notification to SWV Backend failed.")
-                    }
+                    // ... httpRequest 로직 ...
                 }
             }
         }
