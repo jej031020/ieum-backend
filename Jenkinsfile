@@ -67,6 +67,7 @@ stage('SonarQube Analysis & Quality Gate') {
         stage('Notify SWV Backend') {
             steps {
                 script {
+                    def sonarResultMap = new HashMap<>(new groovy.json.JsonSlurper().parseText(env.SONARQUBE_RESULT_JSON))
                     def payload = [
                         jobName             : env.JOB_NAME,
                         buildNumber         : env.BUILD_NUMBER.toInteger(),
