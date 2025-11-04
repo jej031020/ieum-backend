@@ -70,8 +70,11 @@ pipeline {
                     def payloadJson = groovy.json.JsonOutput.toJson(payload)
                     
                     echo "========================================================"
-                    echo ">>> STEP 2: VERIFYING httpRequest (WITHOUT authentication)"
+                    echo ">>> Preparing to send HTTP POST to SWV Backend"
                     echo ">>> Request URL: ${params.SWV_BACKEND_URL}"
+                    echo ">>> Final JSON String being sent:"
+                    // [핵심 로깅 2] 최종 전송될 JSON 문자열을 그대로 출력
+                    echo payloadJsonString
                     echo "========================================================"
                     
                     try {
