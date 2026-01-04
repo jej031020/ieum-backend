@@ -52,7 +52,9 @@ pipeline {
             steps {
                 script {
                     withSonarQubeEnv(env.SONAR_SERVER) {
-                        sh "./gradlew --no-daemon sonar -Dsonar.projectKey=${params.SONAR_PROJECT_KEY} -Dsonar.token=${SONAR_AUTH_TOKEN}"
+                        sh "./gradlew --no-daemon sonar \
+                        -Dsonar.projectKey=${params.SONAR_PROJECT_KEY} \
+                        -Dsonar.token=${SONAR_AUTH_TOKEN}"
                     }
                     
                     // [핵심 수정 2] 결과를 'env'가 아닌 파이프라인 변수에 직접 저장
@@ -74,7 +76,7 @@ pipeline {
                     echo ">>> Request URL: ${params.SWV_BACKEND_URL}"
                     echo ">>> Final JSON String being sent:"
                     // [핵심 로깅 2] 최종 전송될 JSON 문자열을 그대로 출력
-                    echo payloadJsonString
+                    echo payloadJson
                     echo "========================================================"
                     
                     try {
