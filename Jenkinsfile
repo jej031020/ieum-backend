@@ -67,7 +67,11 @@ pipeline {
             steps {
                 script {
                     def payload = [
-                        // ... payload 데이터 ...
+                        jobName     : env.JOB_NAME,
+                        buildNumber : env.BUILD_NUMBER.toInteger(),
+                        status      : qualityGateResult.status, // SonarQube 결과 (OK, ERROR 등)
+                        buildUrl    : env.BUILD_URL,
+                        commitHash  : sh(returnStdout: true, script: 'git rev-parse HEAD').trim()
                     ]
                     def payloadJson = groovy.json.JsonOutput.toJson(payload)
                     
