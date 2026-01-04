@@ -4,7 +4,7 @@ def qualityGateResult
 properties([
     parameters([
         string(name: 'SONAR_PROJECT_KEY', defaultValue: 'your-project-key-here', description: 'SonarQube Project Key'),
-        string(name: 'SWV_BACKEND_URL', defaultValue: 'http://mp-backend:3000/api/team-statistics', description: 'SWV Backend Notification URL')
+        string(name: 'SWV_BACKEND_URL', defaultValue: 'http://mp-backend:3000/api/code-analysis', description: 'SWV Backend Notification URL')
     ])
 ])
 
