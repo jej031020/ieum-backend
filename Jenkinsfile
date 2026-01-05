@@ -67,11 +67,15 @@ pipeline {
             steps {
                 script {
                     def payload = [
-                        jobName     : env.JOB_NAME,
-                        buildNumber : env.BUILD_NUMBER.toInteger(),
-                        status      : qualityGateResult.status, // SonarQube 결과 (OK, ERROR 등)
-                        buildUrl    : env.BUILD_URL,
-                        commitHash  : sh(returnStdout: true, script: 'git rev-parse HEAD').trim()
+                        teamName: "IEUM-Backend-Team", // 임의의 팀명 또는 파라미터 활용
+                        jenkinsJobName: env.JOB_NAME,
+                        analysis: [
+                            jobName: env.JOB_NAME,
+                            buildNumber: env.BUILD_NUMBER.toInteger(),
+                            status: qualityGateResult.status,
+                            buildUrl: env.BUILD_URL,
+                            commitHash: sh(returnStdout: true, script: 'git rev-parse HEAD').trim()
+                        ]
                     ]
                     def payloadJson = groovy.json.JsonOutput.toJson(payload)
                     
